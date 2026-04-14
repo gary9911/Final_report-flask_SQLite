@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>個人資產中心 | 績效 </title>
+    <link rel="stylesheet" href="CSS/all.min.css">
+    <link rel="stylesheet" href="css/my_css3_final.css">   
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a class="nav-item" href="index.html"><i class="fa-solid fa-house"></i><span>首頁</span></a>
+        <a class="nav-item" href="follows.html"><i class="fa-solid fa-chart-area"></i><span>追蹤</span></a>
+        <a class="nav-item active" href="performance.html"><i class="fa-solid fa-chart-line"></i><span>績效</span></a>
+        <a class="nav-item" href="record.html"><i class="fa-solid fa-list-check"></i><span>記帳</span></a>
+        <a class="nav-item " href="focus.html"><i class="fa-solid fa-circle-info"></i><span>資訊</span></a>
+    </nav>
+
+    <div class="app-container">
+        <header class="hero-section">
+            <div class="hero-title">股票資產淨值</div>
+            <div class="hero-amount">
+                <span class="currency">NT$</span>
+                <span class="num" id="total-net-worth">0</span>
+            </div>
+            
+            <div class="hero-sub-info">
+                <div><span>今日台股損益</span><strong class="num" id="hero-tw-profit"><span style="color:var(--text-muted)">-</span></strong></div>
+                <div><span>今日美股損益</span><strong class="num" id="hero-us-profit"><span style="color:var(--text-muted)">-</span></strong></div>
+            </div>
+        </header>
+
+        <main id="main-content">
+            <div class="history-controls">
+                <button class="hero-btn" id="btn-sort-pct" style="border: 1px solid var(--accent-gold);">日漲跌%</button>
+                <button class="hero-btn" id="btn-sort-day" style="border: 1px solid var(--accent-gold);">日獲利排行</button>
+                <button class="hero-btn" id="btn-sort-month" style="border: 1px solid var(--accent-gold);">月獲利排行</button>
+                <button class="hero-btn dark-btn active-hero" id="btn-sort-default" style="border: 1px solid var(--accent-gold);">預設</button>
+            </div>
+
+            <div class="card">
+                <div class="card-header" style="cursor: default; padding-bottom: 8px;">
+                    <div class="card-title-group">
+                        <h2 class="card-title">近日漲跌排行分析</h2>
+                        <span class="card-subtitle">投資組合績效矩陣</span>
+                    </div>
+                </div>
+
+                <div class="history-grid tx-header"
+                    style="grid-template-columns: 1.4fr 1.1fr 1.1fr 1.1fr 1.8fr 1.8fr; padding-top: 10px;">
+                    <div class="col-name">代號</div>
+                    <div>1日(%)</div>
+                    <div>5日(%)</div>
+                    <div>22日(%)</div>
+                    <div style="text-align:right">月損益 NT$</div>
+                    <div style="text-align:right">日損益 NT$</div>
+                </div>
+
+                <div class="history-grid" id="summary-row"
+                    style="background:rgba(197,160,89,0.08); border-radius:6px; padding:10px 8px; margin:8px 0; border:none; grid-template-columns: 1.4fr 1.1fr 1.1fr 1.1fr 1.8fr 1.8fr;">
+                    <div class="col-name" style="color:var(--accent-gold); font-size:13px;">組合總計</div>
+                    <div>-</div>
+                    <div>-</div>
+                    <div>-</div>
+                    <div class="num color-up" style="text-align:right; font-weight:700;">+0</div>
+                    <div class="num color-down" style="text-align:right; font-weight:700;">-0</div>
+                </div>
+
+                <div id="dynamic-perfor-rows">
+                    <div style="text-align:center; padding:20px; color:var(--text-muted); font-size:13px;">載入中...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/jquery-4.0.0.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            let globalPortfolio = []; 
+
+            function formatPercentStr(percent) {
+                if (percent === null || isNaN(percent)) return `+<span style="color:var(--text-muted)">-</span>`;
+                let formattedStr = percent.toFixed(2) + "%";
+                if (percent > 0) return `<span class="color-up">+${formattedStr}</span>`;
+                else if (percent < 0) return `<span class="color-down">${formattedStr}</span>`;
+                else return `<span style="color:var(--text-muted)">0.00%</span>`;
+            }
+
+            function formatMoney(amount) {
+                let val = Math.round(amount);
+                if (val > 0) return `<span class="color-up">+${val.toLocaleString()}</span>`;
+                else if (val < 0) return `<span class="color-down">${val.toLocaleString()}</span>`;
+                else return `<span style="color:var(--text-muted)">0</span>`;
+            }
+
+            function renderPortfolioRows(dataArray) {
+                const myPerforRows = $('#dynamic-perfor-rows');
+                if (dataArray.length === 0) {
+                    myPerforRows.html('<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:13px;">目前無持股部位</div>');
+                    return;
+                }
+
+                const rowsHtml = dataArray.map(function (item) {
+                    return `
+                        <div class="history-grid" style="grid-template-columns: 1.4fr 1.1fr 1.1fr 1.1fr 1.8fr 1.8fr;">
+                            <div class="col-name num">${item.symbol}</div>
+                            <div class="num">${formatPercentStr(item.pct_1d)}</div>
+                            <div class="num">${formatPercentStr(item.pct_5d)}</div>
+                            <div class="num">${formatPercentStr(item.pct_22d)}</div>
+                            <div class="num" style="text-align:right">${formatMoney(item.profit_month)}</div>
+                            <div class="num" style="text-align:right">${formatMoney(item.profit_day)}</div>
+                        </div>`;
+                }).join('');
+
+                myPerforRows.html(rowsHtml);
+            }
+
+            $.ajax({
+                url: 'http://127.0.0.1:5000/portfolio',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    let totalNetWorth = 0, sumDailyProfit = 0, sumMonthlyProfit = 0;
+                    let twSumCurrent = 0, twSumPast = 0, usSumCurrent = 0, usSumPast = 0;
+                    let dynamicUsdRate = data.exchange_rate || 31.7;
+
+                    if (data.portfolio && Array.isArray(data.portfolio)) {
+                        globalPortfolio = data.portfolio.map(function(item) {
+                            let current = item.current_price;
+                            let exRate = item.category === 'US' ? dynamicUsdRate : 1;
+                            
+                            let pct_1d = item.past_1d > 0 ? ((current - item.past_1d) / item.past_1d) * 100 : 0;
+                            let pct_5d = item.past_5d > 0 ? ((current - item.past_5d) / item.past_5d) * 100 : 0;
+                            let pct_22d = item.past_22d > 0 ? ((current - item.past_22d) / item.past_22d) * 100 : 0;
+
+                            let profit_day = (current - item.past_1d) * item.total_shares * exRate;
+                            let profit_month = (current - item.past_22d) * item.total_shares * exRate;
+
+                            let stockValue = item.total_shares * current * exRate;
+                            totalNetWorth += stockValue;
+                            sumDailyProfit += profit_day;
+                            sumMonthlyProfit += profit_month;
+
+                            if (item.past_1d > 0) {
+                                let valPast = item.past_1d * item.total_shares * exRate;
+                                if (item.category === 'TW') { twSumCurrent += stockValue; twSumPast += valPast; } 
+                                else { usSumCurrent += stockValue; usSumPast += valPast; }
+                            }
+
+                            return { ...item, pct_1d, pct_5d, pct_22d, profit_day, profit_month };
+                        });
+
+                        globalPortfolio.sort((a, b) => {
+                            if (a.category !== b.category) return a.category === 'TW' ? -1 : 1;
+                            return b.profit_day - a.profit_day;
+                        });
+                        
+                        renderPortfolioRows(globalPortfolio);
+                        $('#total-net-worth').text(Math.round(totalNetWorth).toLocaleString());
+                        
+                        $('#summary-row').html(`
+                            <div class="col-name" style="color:var(--accent-gold); font-size:13px;">組合總計</div>
+                            <div>-</div><div>-</div><div>-</div>
+                            <div class="num" style="text-align:right; font-weight:700;">${formatMoney(sumMonthlyProfit)}</div>
+                            <div class="num" style="text-align:right; font-weight:700;">${formatMoney(sumDailyProfit)}</div>
+                        `);
+
+                        let twProfitAmt = twSumCurrent - twSumPast;
+                        let twProfitPct = twSumPast > 0 ? (twProfitAmt / twSumPast) * 100 : 0;
+                        let usProfitAmt = usSumCurrent - usSumPast;
+                        let usProfitPct = usSumPast > 0 ? (usProfitAmt / usSumPast) * 100 : 0;
+
+                        function formatHeroDisplay(amt, pct, pastSum) {
+                            if (pastSum === 0) return `<span style="color:var(--text-muted)">-</span>`;
+                            let sign = amt > 0 ? '+' : '';
+                            let colorClass = amt > 0 ? 'color-up' : (amt < 0 ? 'color-down' : 'text-muted');
+                            return `<span class="${colorClass}">${sign}${Math.round(amt).toLocaleString()} (${sign}${pct.toFixed(2)}%)</span>`;
+                        }
+
+                        $('#hero-tw-profit').html(formatHeroDisplay(twProfitAmt, twProfitPct, twSumPast));
+                        $('#hero-us-profit').html(formatHeroDisplay(usProfitAmt, usProfitPct, usSumPast));
+                    }
+                },
+                error: function () {
+                    $('#total-net-worth').text('載入失敗');
+                    $('#dynamic-perfor-rows').html('<div style="text-align:center; padding:20px; color:var(--up-red); font-size:13px;">API 連線失敗，請確認後端已啟動</div>');
+                }
+            });
+
+            function setActiveButton(clickedBtnId) {
+                $('.history-controls button').removeClass('dark-btn active-hero').css('background-color', '');
+                $('#' + clickedBtnId).addClass('active-hero').css('background-color', 'var(--accent-gold)');
+            }
+
+            // 追加修正：採用策略模式 (Strategy Pattern) 優化按鈕邏輯
+            const sortStrategies = {
+                'btn-sort-pct': (a, b) => b.pct_1d - a.pct_1d,
+                'btn-sort-day': (a, b) => b.profit_day - a.profit_day,
+                'btn-sort-month': (a, b) => b.profit_month - a.profit_month,
+                'btn-sort-default': (a, b) => (a.category !== b.category) ? (a.category === 'TW' ? -1 : 1) : b.profit_day - a.profit_day
+            };
+
+            $('.hero-btn').click(function() {
+                const btnId = $(this).attr('id');
+                setActiveButton(btnId);
+                
+                if (sortStrategies[btnId]) {
+                    const sorted = [...globalPortfolio].sort(sortStrategies[btnId]);
+                    renderPortfolioRows(sorted);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

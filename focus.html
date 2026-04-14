@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>個人資產中心 | 資訊中心 </title>
+    <link rel="stylesheet" href="/CSS/all.min.css">
+    <link rel="stylesheet" href="css/my_css3_final.css">
+    <style>
+        :root {
+            --up-red: #e63946;
+            --down-green: #2a9d8f;
+            --neutral-grey: #8a94a6;
+            --card-bg: #ffffff;
+            --border-light: #f1f3f5;
+            --accent-gold: #c5a059;
+        }
+
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 10px;
+        }
+
+        .grid-item {
+            background: var(--card-bg);
+            /* 🌟 套用金色外框線 */
+            border: 1px solid var(--accent-gold);
+            border-radius: 14px; 
+            padding: 14px 10px;  
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(78, 66, 44, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .grid-item:active {
+            transform: scale(0.96);
+        }
+
+        .grid-title {
+            font-size: 13px;
+            color: #8a94a6;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .grid-num {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a2436;
+        }
+
+        .grid-change {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .grid-time {
+            font-size: 9px;
+            color: var(--neutral-grey);
+            margin-top: 6px; 
+            font-family: 'Inter', sans-serif;
+            opacity: 0.8;
+        }
+
+        
+        .trend-up-bg {
+            background-color: var(--up-red) !important;
+            border-color: var(--accent-gold) !important; /* 確保背景變色時，外框依然是金色 */
+        }
+
+        .trend-down-bg {
+            background-color: var(--down-green) !important;
+            border-color: var(--accent-gold) !important; /* 確保背景變色時，外框依然是金色 */
+        }
+
+        /* 讓有背景色的卡片內的文字轉為白色，確保對比度與易讀性 */
+        .trend-up-bg .grid-title, .trend-down-bg .grid-title {
+            color: rgba(255, 255, 255, 0.85) !important;
+        }
+        
+        .trend-up-bg .grid-num, .trend-down-bg .grid-num,
+        .trend-up-bg .grid-change, .trend-down-bg .grid-change {
+            color: #ffffff !important;
+        }
+
+        .trend-up-bg .grid-time, .trend-down-bg .grid-time {
+            color: rgba(255, 255, 255, 0.65) !important;
+        }
+
+        .trend-neutral {
+            color: var(--neutral-grey) !important;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #1a2436 0%, #2c3e50 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a class="nav-item" href="index.html"><i class="fa-solid fa-house"></i><span>首頁</span></a>
+        <a class="nav-item" href="follows.html"><i class="fa-solid fa-chart-area"></i><span>追蹤</span></a>
+        <a class="nav-item" href="performance.html"><i class="fa-solid fa-chart-line"></i><span>績效</span></a>
+        <a class="nav-item" href="record.html"><i class="fa-solid fa-list-check"></i><span>記帳</span></a>
+        <a class="nav-item active" href="focus.html"><i class="fa-solid fa-circle-info"></i><span>資訊</span></a>
+    </nav>
+    <div class="app-container">
+        <header class="hero-section">
+            <div class="hero-title" style="opacity: 0.8; font-size: 11px; letter-spacing: 2px;">MARKET DASHBOARD</div>
+            <div class="hero-amount" style="font-size: 20px;">全球市場監控</div>
+        </header>
+        <main class="market-grid">
+            <div class="grid-item" id="item-twii">
+                <div class="grid-title">台灣大盤</div>
+                <div class="grid-num" id="val-twii">--</div>
+                <div class="grid-change" id="chg-twii">--</div>
+                <div class="grid-time" id="time-twii">--</div>
+            </div>
+            <div class="grid-item" id="item-spx">
+                <div class="grid-title">S&P 500</div>
+                <div class="grid-num" id="val-spx">--</div>
+                <div class="grid-change" id="chg-spx">--</div>
+                <div class="grid-time" id="time-spx">--</div>
+            </div>
+            <div class="grid-item" id="item-txf">
+                <div class="grid-title">摩台 ETF</div>
+                <div class="grid-num" id="val-txf">--</div>
+                <div class="grid-change" id="chg-txf">--</div>
+                <div class="grid-time" id="time-txf">--</div>
+            </div>
+            <div class="grid-item" id="item-twd">
+                <div class="grid-title">USD/TWD</div>
+                <div class="grid-num" id="val-twd">--</div>
+                <div class="grid-change" id="chg-twd">--</div>
+                <div class="grid-time" id="time-twd">--</div>
+            </div>
+            <div class="grid-item" id="item-vix">
+                <div class="grid-title">VIX 指數</div>
+                <div class="grid-num" id="val-vix">--</div>
+                <div class="grid-change" id="chg-vix">--</div>
+                <div class="grid-time" id="time-vix">--</div>
+            </div>
+            <div class="grid-item" id="item-brent">
+                <div class="grid-title">Brent 原油</div>
+                <div class="grid-num" id="val-brent">--</div>
+                <div class="grid-change" id="chg-brent">--</div>
+                <div class="grid-time" id="time-brent">--</div>
+            </div>
+            <div class="grid-item" id="item-fgi">
+                <div class="grid-title">CNN 恐懼與貪婪</div>
+                <div class="grid-num" id="val-fgi">--</div>
+                <div class="grid-change" id="txt-fgi" style="font-size: 13px;">--</div>
+                <div class="grid-time" id="time-fgi">--</div>
+            </div>
+        </main>
+    </div>
+    <script src="js/jquery-4.0.0.js"></script>
+    <script>
+        $(document).ready(function () {
+            const API_MARKET = "http://127.0.0.1:5000/market_data";
+            const API_FGI = "http://127.0.0.1:5000/fear_greed";
+
+            function updateUI(id, data) {
+                if (!data || data.price === null) return;
+                const $val = $(`#val-${id}`), $chg = $(`#chg-${id}`), $card = $(`#item-${id}`), $time = $(`#time-${id}`);
+                
+                $val.text(Number(data.price).toLocaleString('en-US', { minimumFractionDigits: (id === 'twd' ? 3 : 2) }));
+                
+                const diff = data.diff || 0, ratio = data.ratio || 0, isUp = diff > 0, isDown = diff < 0;
+                const trend = isUp ? "trend-up" : (isDown ? "trend-down" : "trend-neutral");
+                
+                $chg.text(`${isUp ? '▲' : isDown ? '▼' : ''} ${isUp ? '+' : ''}${diff.toFixed(2)} (${isUp ? '+' : ''}${ratio.toFixed(2)}%)`).removeClass('trend-up trend-down trend-neutral').addClass(trend);
+                $val.removeClass('trend-up trend-down trend-neutral').addClass(trend);
+                $card.removeClass('trend-up-bg trend-down-bg').addClass(isUp ? 'trend-up-bg' : isDown ? 'trend-down-bg' : '');
+                $time.text(`${data.is_history ? '最後更新' : '更新時間'} ${data.time}`);
+            }
+
+            function fetchMarket() { $.get(API_MARKET, res => { for (let k in res) updateUI(k, res[k]); }); }
+
+            function fetchFGI() {
+                $.get(API_FGI, res => {
+                    const $val = $('#val-fgi'), $txt = $('#txt-fgi'), $card = $('#item-fgi'), $time = $('#time-fgi');
+                    
+                    $val.text(res.score); $txt.text(res.rating);
+                    $val.add($txt).removeClass('trend-up trend-down trend-neutral');
+                    $card.removeClass('trend-up-bg trend-down-bg');
+                    
+                    if (res.score >= 56) { 
+                        $val.add($txt).addClass('trend-up'); 
+                        $card.addClass('trend-up-bg'); 
+                    }
+                    else if (res.score <= 44) { 
+                        $val.add($txt).addClass('trend-down'); 
+                        $card.addClass('trend-down-bg'); 
+                    }
+                    $time.text(`更新時間 ${res.time}`);
+                });
+            }
+
+            fetchMarket(); fetchFGI();
+            setInterval(fetchMarket, 60000); setInterval(fetchFGI, 300000);
+        });
+    </script>
+</body>
+
+</html>

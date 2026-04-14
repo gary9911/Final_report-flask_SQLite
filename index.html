@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>個人資產中心 | 首頁</title>
+    <link rel="stylesheet" href="CSS/my_css3_final.css">
+    <link rel="stylesheet" href="CSS/all.min.css">
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a class="nav-item active" href="index.html"><i class="fa-solid fa-house"></i><span>首頁</span></a>
+        <a class="nav-item" href="follows.html"><i class="fa-solid fa-chart-area"></i><span>追蹤</span></a>
+        <a class="nav-item" href="performance.html"><i class="fa-solid fa-chart-line"></i><span>績效</span></a>
+        <a class="nav-item" href="record.html"><i class="fa-solid fa-list-check"></i><span>記帳</span></a>
+        <a class="nav-item " href="focus.html"><i class="fa-solid fa-circle-info"></i><span>資訊</span></a>
+    </nav>
+
+    <div class="app-container">
+
+        <header class="hero-section">
+            <div class="hero-title">總資產淨值</div>
+            <div class="hero-amount">
+                <span class="currency">NT$</span>
+                <span class="num" id="total-net-worth">0</span>
+            </div>
+            <div class="hero-sub-info">
+                <div><span>總投資成本</span><strong class="num" id="total-invest-cost">0</strong></div>
+                <div><span>總報酬率</span><strong class="num" id="total-roi">+0.00%</strong></div>
+                <div><span>今日損益</span><strong class="num text-muted">-</strong></div>
+            </div>
+        </header>
+
+        <main id="main-content">
+            <div class="card" style="cursor: default;">
+                <div class="card-header" style="margin-bottom:0;">
+                    <div class="card-title-group">
+                        <h2 class="card-title">資產配置比例</h2>
+                        <span class="card-subtitle">投資組合與現金分配</span>
+                    </div>
+                </div>
+                <div class="allocation-chart-container">
+                    <canvas id="assetChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card" onclick="this.classList.toggle('expanded')">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <h2 class="card-title">台股資產</h2>
+                        <span class="card-subtitle" id="tw-total-cost">總成本: 0</span>
+                    </div>
+                    <div>
+                        <div class="card-value num" id="tw-net-worth">0</div>
+                        <div class="card-roi num" id="tw-roi">0%</div>
+                    </div>
+                </div>
+                <div class="list-container" id="tw-stocks">
+                </div>
+                <div class="card-toggle-icon"><i class="fa-solid fa-chevron-down"></i></div>
+            </div>
+
+            <div class="card" onclick="this.classList.toggle('expanded')">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <h2 class="card-title">美股資產</h2>
+                        <span class="card-subtitle" id="us-total-cost">總成本: 0</span>
+                    </div>
+                    <div>
+                        <div class="card-value num" id="us-net-worth">0</div>
+                        <div class="card-roi num" id="us-roi">0%</div>
+                    </div>
+                </div>
+                <div class="list-container" id="us-stocks">
+                </div>
+                <div class="card-toggle-icon"><i class="fa-solid fa-chevron-down"></i></div>
+            </div>
+
+            <div class="card" onclick="this.classList.toggle('expanded')">
+                <div class="card-header" style="padding-bottom: 8px;">
+                    <h2 class="card-title">現金資產</h2>
+                    <div>
+                        <div class="card-value num" id="total-cash">0</div>
+                    </div>
+                </div>
+                <div class="list-container" style="border-top: none; margin-top: 0;" id="cash_area">
+                </div>
+                <div class="card-toggle-icon"><i class="fa-solid fa-chevron-down"></i></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/jquery-4.0.0.js"></script>
+    <script src="js/chart.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            const API_URL = "http://127.0.0.1:5000/portfolio"; 
+            const CASH_API_URL = "http://127.0.0.1:5000/cash";
+            let myAssetChart = null;
+
+
+            const formatNTD = (num) => "NT$ " + Math.round(num).toLocaleString();
+
+            function loadData() {
+                $.ajax({
+                    url: API_URL,
+                    type: 'GET',
+                    success: function (data) {
+                        $('#tw-stocks').empty();
+                        $('#us-stocks').empty();
+                        $('#cash_area').empty();
+
+                        let twSumCost = 0, twSumNet = 0;
+                        let usSumCost = 0, usSumNet = 0;
+
+
+                        const USD_EXRATE = data.exchange_rate || 31.7;
+
+                        // 防錯處理：確保 portfolio 是陣列才執行
+                        if (data.portfolio && Array.isArray(data.portfolio)) {
+                            data.portfolio.forEach(function (stock) {
+                                let cPrice = stock.current_price;
+
+                                if (stock.category === 'TW') {
+                                    twSumCost += stock.total_cost;
+                                    let netWorth = cPrice * stock.total_shares;
+                                    twSumNet += netWorth;
+
+                                    $('#tw-stocks').append(`
+                                        <div class="list-item">
+                                            <div class="item-col">
+                                                <span class="item-main">${stock.symbol}</span>
+                                                <span class="item-sub num">${stock.total_shares.toLocaleString()} 股</span>
+                                            </div>
+                                            <div class="item-col" style="text-align:center;">
+                                                <span class="item-main num color-up">NT$ ${cPrice.toFixed(2)}</span>
+                                                <span class="item-sub">現價</span>
+                                            </div>
+                                            <div class="item-col right">
+                                                <span class="item-main num">${formatNTD(netWorth)}</span>
+                                            </div>
+                                        </div>
+                                    `);
+                                } else {
+                                    usSumCost += stock.total_cost;
+                                    let netWorthUSD = cPrice * stock.total_shares;
+                                    let netWorthTWD = netWorthUSD * USD_EXRATE;
+                                    usSumNet += netWorthTWD;
+
+                                    $('#us-stocks').append(`
+                                        <div class="list-item">
+                                            <div class="item-col">
+                                                <span class="item-main">${stock.symbol}</span>
+                                                <span class="item-sub num">${stock.total_shares.toLocaleString()} 股</span>
+                                            </div>
+                                            <div class="item-col" style="text-align:center;">
+                                                <span class="item-main num color-up">US$ ${cPrice.toFixed(2)}</span>
+                                                <span class="item-sub">現價</span>
+                                            </div>
+                                            <div class="item-col right">
+                                                <span class="item-main num">${formatNTD(netWorthTWD)}</span>
+                                                <span class="item-sub reduced-font">US$ ${Math.round(netWorthUSD).toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    `);
+                                }
+                            });
+                        }
+
+                        let totalCash = 0;
+                        
+
+                        if (data.cash && Array.isArray(data.cash)) {
+                            data.cash.forEach(function (c) {
+                                totalCash += c.amount;
+                                $('#cash_area').append(`
+                                    <div class="edit-item">
+                                        <div class="edit-symbol" style="width: auto; flex: 1;">${c.name}</div>
+                                        <div class="edit-inputs" style="justify-content: flex-end; align-items: center; margin-right: 12px;">
+                                            <span class="num fw-bold" style="font-size: 14px;">${formatNTD(c.amount)}</span>
+                                        </div>
+                                        <button class="btn-cash-update btn-edit-cash" data-id="${c.id}" data-name="${c.name}" data-amount="${c.amount}">修改</button>
+                                    </div>
+                                `);
+                            });
+                        }
+                        $('#total-cash').text(formatNTD(totalCash));
+
+                        function setHeaderStats(prefix, cost, net) {
+                            $(`#${prefix}-total-cost`).text(`總成本: ${formatNTD(cost)}`);
+                            $(`#${prefix}-net-worth`).text(formatNTD(net));
+                            let roi = cost > 0 ? ((net - cost) / cost * 100).toFixed(2) : 0;
+                            let roiEl = $(`#${prefix}-roi`);
+                            roiEl.text(`${roi >= 0 ? '+' : ''}${roi}%`);
+                            roiEl.removeClass('color-up color-down').addClass(roi >= 0 ? 'color-up' : 'color-down');
+                        }
+
+                        setHeaderStats('tw', twSumCost, twSumNet);
+                        setHeaderStats('us', usSumCost, usSumNet);
+
+                        let totalInvestCost = twSumCost + usSumCost;
+                        let totalInvestNet = twSumNet + usSumNet;
+                        let totalNetWorth = totalInvestNet + totalCash;
+
+                        $('#total-invest-cost').text(Math.round(totalInvestCost).toLocaleString());
+                        $('#total-net-worth').text(Math.round(totalNetWorth).toLocaleString());
+
+                        let totalRoi = totalInvestCost > 0 ? ((totalInvestNet - totalInvestCost) / totalInvestCost * 100).toFixed(2) : 0;
+                        $('#total-roi').text(`${totalRoi >= 0 ? '+' : ''}${totalRoi}%`);
+                        $('#total-roi').removeClass('color-up color-down').addClass(totalRoi >= 0 ? 'color-up' : 'color-down');
+
+                        drawChart(twSumNet, usSumNet, totalCash);
+                    },
+                    error: function () {
+                        $('#tw-stocks').html('<div style="text-align:center; padding:20px; color:var(--up-red);">載入資料失敗</div>');
+                    }
+                });
+            }
+
+            function drawChart(twNet, usNet, cash) {
+                const ctx = document.getElementById('assetChart').getContext('2d');
+                if (myAssetChart !== null) { myAssetChart.destroy(); }
+                if (twNet === 0 && usNet === 0 && cash === 0) return;
+
+                myAssetChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['台股淨值', '美股淨值', '現金資產'],
+                        datasets: [{
+                            data: [Math.round(twNet), Math.round(usNet), cash],
+                            backgroundColor: ['#C5A059', '#D96B6B', '#3A4A63'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20,
+                                    font: { family: 'Inter', size: 12 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        let label = context.label || '';
+                                        if (label) label += ': ';
+                                        if (context.parsed !== null) {
+                                            label += new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', maximumFractionDigits: 0 }).format(context.parsed);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            loadData();
+
+            $(document).on('click', '.btn-edit-cash', function () {
+                let cid = $(this).data('id');
+                let cname = $(this).data('name');
+                let oldAmount = $(this).data('amount');
+
+                let newAmount = prompt(`請輸入「${cname}」的最新金額：`, oldAmount);
+                if (newAmount !== null && newAmount.trim() !== "" && !isNaN(newAmount)) {
+                    $.ajax({
+                        url: `${CASH_API_URL}/${cid}`,
+                        type: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ amount: Number(newAmount) }),
+                        success: function (response) {
+                            alert(response.message);
+                            loadData();
+                        },
+                        error: function () { alert('修改失敗'); }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

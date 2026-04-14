@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>個人資產中心 | 記帳 </title>
+    <link rel="stylesheet" href="CSS/all.min.css">
+    <link rel="stylesheet" href="css/my_css3_final.css">
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a class="nav-item" href="index.html"><i class="fa-solid fa-house"></i><span>首頁</span></a>
+        <a class="nav-item" href="follows.html"><i class="fa-solid fa-chart-area"></i><span>追蹤</span></a>
+        <a class="nav-item" href="performance.html"><i class="fa-solid fa-chart-line"></i><span>績效</span></a>
+        <a class="nav-item active" href="record.html"><i class="fa-solid fa-list-check"></i><span>記帳</span></a>
+        <a class="nav-item " href="focus.html"><i class="fa-solid fa-circle-info"></i><span>資訊</span></a>
+    </nav>
+
+    <div class="app-container">
+        <header class="hero-section" style="padding-bottom: 10px;">
+            <div class="hero-title">TRANSACTIONS</div>
+            <div class="hero-amount" style="font-size: 32px;">交易流水與記帳</div>
+        </header>
+
+        <main id="main-content">
+            <div class="card" id="newStockPanel"
+                style="display: none; border: 1.5px solid var(--accent-gold); box-shadow: 0 4px 20px rgba(197, 160, 89, 0.15);">
+                <div class="card-header" style="cursor:default; padding-bottom:12px;">
+                    <h2 class="card-title" style="color: var(--accent-gold);">新增全新股票標的</h2>
+                    <span class="card-subtitle">將此標的加入監控清單</span>
+                </div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <span class="edit-label">市場種類</span>
+                        <select id="m-market" class="edit-input">
+                            <option value="TW">台股</option>
+                            <option value="US">美股</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <span class="edit-label">股票代號</span>
+                        <input type="text" id="m-symbol" class="edit-input" placeholder="例: 2330 或 MSFT">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <span class="edit-label">中文/英文名稱</span>
+                        <input type="text" id="m-name" class="edit-input" placeholder="例: 台積電 或 Apple">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <span class="edit-label">買入股數</span>
+                        <input type="number" id="m-shares" class="edit-input" placeholder="初始股數">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-col" style="flex: 0.5;">
+                        <span class="edit-label">幣別</span>
+                        <select id="m-currency" class="edit-input" disabled>
+                            <option value="TWD">台幣</option>
+                            <option value="USD">美金</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <span class="edit-label">買入成本金額</span>
+                        <input type="number" id="m-cost" class="edit-input" placeholder="初始成本總額">
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:12px;">
+                    <button type="button" class="btn-half btn-clear" id="btn-cancel-new-stock">取消</button>
+                    <button type="button" class="btn-half btn-stage" id="btn-save-new-stock"
+                        style="background: var(--accent-gold);">加入變更紀錄</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header" style="cursor:default; padding-bottom:12px;">
+                    <h2 class="card-title">新增交易流水</h2>
+                </div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <span class="edit-label">代號</span>
+                        <select id="t-symbol" class="edit-input">
+                            <option value="" selected disabled>請選擇標的</option>
+                            <option value="006208">006208 富邦台50</option>
+                            <option value="00878">00878 國泰永續高股息</option>
+                            <option value="2886">2886 兆豐金</option>
+                            <option value="00881">00881 國泰台灣科技龍頭</option>
+                            <option value="2881">2881 富邦金</option>
+                            <option value="GOOG">GOOG (Alphabet)</option>
+                            <option value="VTI">VTI (Vanguard Total)</option>
+                            <option value="SMH">SMH (Semiconductor)</option>
+                            <option value="TSLA">TSLA (Tesla)</option>
+                            <option value="QQQ">QQQ (Invesco QQQ)</option>
+                            <option value="AAPL">AAPL (Apple)</option>
+                            <option value="LQD">LQD (Corp Bond)</option>
+                            <option value="TLT">TLT (20+ Yr Treasury)</option>
+                            <option value="NEW" style="font-weight: 700; color: var(--accent-gold);">**新增全新標的**</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <span class="edit-label">動作</span>
+                        <select id="t-type" class="edit-input">
+                            <option value="buy">買入</option>
+                            <option value="sell">賣出</option>
+                            <option value="div">配息</option>
+                            <option value="other">其它(微調)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-col" style="flex: 1.5;">
+                        <span class="edit-label">日期</span>
+                        <input type="date" id="t-date" class="edit-input">
+                    </div>
+                    <div class="form-col" style="flex: 0.8;">
+                        <span class="edit-label">幣別</span>
+                        <select id="t-currency" class="edit-input" disabled>
+                            <option value="TWD">台幣</option>
+                            <option value="USD">美金</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <span class="edit-label">股數</span>
+                        <input type="number" id="t-shares" class="edit-input" placeholder="輸入股數">
+                    </div>
+                    <div class="form-col">
+                        <span class="edit-label">金額</span>
+                        <input type="number" id="t-cost" class="edit-input" placeholder="輸入金額">
+                    </div>
+                </div>
+                <button id="btn-add-trans" class="btn-commit" style="background: var(--text-navy);">加入暫存區</button>
+            </div>
+
+            <div class="card" id="draft-tx-card">
+                <div class="card-header" style="cursor:default; padding-bottom:8px;">
+                    <div class="card-title-group">
+                        <h2 class="card-title">變更紀錄暫存區</h2>
+                        <span class="card-subtitle">尚未寫入資料庫</span>
+                    </div>
+                </div>
+                <div class="tx-grid tx-header" style="grid-template-columns: 1fr 1fr 0.8fr 1.2fr;">
+                    <div>日期/標的</div>
+                    <div>動作</div>
+                    <div class="num" style="text-align:right">股數</div>
+                    <div class="num" style="text-align:right">金額</div>
+                </div>
+
+                <div id="change-logs">
+                    <div style="text-align:center; padding:12px 10px 0; font-size:11px; color:var(--text-muted);">
+                        尚未有變更動作...</div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:16px;">
+                    <button class="btn-half btn-clear" id="btn-cancel-pending">清空取消</button>
+                    <button class="btn-half btn-stage" id="save-all-changes"
+                        style="background: var(--accent-gold);">確認寫入金庫</button>
+                </div>
+            </div>
+
+            <div id="dynamic-stocks-container"></div>
+        </main>
+    </div>
+    <script src="js/jquery-4.0.0.js"></script>
+
+    <script>
+        $(function () {
+
+            const API_BASE_URL = "http://127.0.0.1:5000/holdings";
+            const USD_EXRATE = 31.726; // TODO: 未來可串接後端即時匯率
+
+            const ACTION_MAP = { 'buy': '買入', 'sell': '賣出', 'div': '配息', 'other': '其它' };
+
+            const stockNameMap = {
+                '006208': '富邦台50', '00878': '國泰永續高股息', '2886': '兆豐金',
+                '00881': '國泰台灣科技龍頭', '2881': '富邦金', 'GOOG': 'Alphabet',
+                'VTI': 'Vanguard Total', 'SMH': 'Semiconductor', 'TSLA': 'Tesla',
+                'QQQ': 'Invesco QQQ', 'AAPL': 'Apple', 'LQD': 'Corp Bond', 'TLT': '20+ Yr Treasury'
+            };
+
+            let twSymbols = ['006208', '00878', '2886', '00881', '2881'];
+            let pendingTrans = [];
+
+
+            const today = new Date().toISOString().split('T')[0];
+            $("#t-date").val(today);
+
+
+            function getTagClass(type) {
+                return type === 'buy' ? 'tag-buy' : (type === 'sell' ? 'tag-sell' : 'tag-div');
+            }
+
+
+            function fetchAndRenderData() {
+                $.ajax({
+                    type: "GET", url: API_BASE_URL, dataType: "json", cache: false,
+                    success: function (data) { renderTable(data.holdings || []); },
+                    error: function () { console.log("讀取資料失敗，請確認伺服器狀態"); }
+                });
+            }
+
+
+            function renderTable(data) {
+                const $container = $('#dynamic-stocks-container');
+                $container.empty();
+
+                let groupedData = {};
+                data.forEach(item => {
+                    if (!groupedData[item.symbol]) groupedData[item.symbol] = [];
+                    groupedData[item.symbol].push(item);
+                });
+
+                let sortedSymbols = Object.keys(groupedData).sort((a, b) => {
+                    let catA = groupedData[a][0].category;
+                    let catB = groupedData[b][0].category;
+                    return catA === catB ? a.localeCompare(b) : (catA === 'TW' ? -1 : 1);
+                });
+
+                const htmlString = sortedSymbols.map(symbol => {
+                    let transactions = groupedData[symbol];
+                    let market = transactions[0].category;
+                    let badgeClass = market === 'TW' ? 'tag-buy' : 'tag-sell';
+                    let marketLabel = market === 'TW' ? '台股' : '美股';
+                    let fullName = stockNameMap[symbol] ? `${symbol} ${stockNameMap[symbol]}` : symbol;
+
+                    let blockHtml = `
+                    <div class="card tx-card">
+                        <div class="card-header tx-stock-header" style="margin-bottom:0;">
+                            <div>
+                                <h2 class="card-title">${fullName}</h2>
+                                <span class="tx-tag ${badgeClass}" style="margin-top: 4px;">${marketLabel}</span>
+                            </div>
+                            <div class="card-toggle-icon"><i class="fa-solid fa-chevron-down"></i></div>
+                        </div>
+                        <div class="list-container" style="border-top: none; margin-top: 8px;">
+                            <div class="tx-grid tx-header">
+                                <div>日期</div>
+                                <div>動作</div>
+                                <div class="num" style="text-align:right">股數</div>
+                                <div class="num" style="text-align:right">金額</div>
+                                <div style="text-align:right">操作</div>
+                            </div>`;
+
+                    blockHtml += transactions.map(item => {
+                        let displayCurrency = item.category === 'TW' ? 'NT$' : 'US$';
+                        let displayCost = item.category === 'TW' ? item.cost : (item.cost / USD_EXRATE).toFixed(2);
+                        return `
+                            <div class="tx-grid">
+                                <div class="num">${item.date.substring(5)}</div>
+                                <div><span class="tx-tag ${getTagClass(item.type)}">${ACTION_MAP[item.type]}</span></div>
+                                <div class="num tx-shares-val" style="text-align:right">${item.shares}</div>
+                                <div class="num" style="text-align:right">${displayCurrency}${displayCost}</div>
+                                <div style="text-align:right">
+                                    <button class="tx-action-btn btn-edit-trans" data-id="${item.id}" data-category="${item.category}" data-symbol="${symbol}" data-type="${item.type}" data-date="${item.date}" data-cost="${item.cost}"><i class="fa-solid fa-pen"></i></button>
+                                    <button class="tx-action-btn btn-delete-trans" data-id="${item.id}"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>`;
+                    }).join('');
+
+                    return blockHtml + `</div></div>`;
+                }).join('');
+
+                $container.html(htmlString);
+            }
+
+
+            function renderPendingTable() {
+                const $logs = $("#change-logs");
+                if (pendingTrans.length === 0) {
+                    $logs.html('<div style="text-align:center; padding:12px 10px 0; font-size:11px; color:var(--text-muted);">尚未有變更動作...</div>');
+                    return;
+                }
+
+                const htmlStr = pendingTrans.map(item => {
+                    let currencySymbol = item.category === 'US' ? 'US$' : 'NT$';
+                    let displayCost = item.category === 'US' ? (item.cost / USD_EXRATE).toFixed(2) : item.cost;
+                    return `
+                    <div class="tx-grid" style="grid-template-columns: 1fr 1fr 0.8fr 1.2fr;">
+                        <div class="num">${item.date.substring(5)}<br><span style="font-size:10px;font-weight:700;color:var(--text-navy);">${item.symbol}</span></div>
+                        <div><span class="tx-tag ${getTagClass(item.type)}">${ACTION_MAP[item.type]}</span></div>
+                        <div class="num" style="text-align:right">${item.shares}</div>
+                        <div class="num fw-bold" style="text-align:right">${currencySymbol} ${displayCost}</div>
+                    </div>`;
+                }).join('');
+
+                $logs.html(htmlStr);
+            }
+
+            fetchAndRenderData();
+
+
+            $("#t-symbol").change(function () {
+                let symbol = $(this).val();
+                if (symbol === "NEW") {
+                    $("#newStockPanel").slideDown();
+                    $(this).val("");
+                } else if (symbol) {
+                    $("#t-currency").val(twSymbols.includes(symbol) ? "TWD" : "USD");
+                }
+            });
+
+            $("#m-market").change(function () {
+                $("#m-currency").val($(this).val() === "TW" ? "TWD" : "USD");
+            });
+
+            $("#btn-cancel-new-stock").click(() => $("#newStockPanel").slideUp());
+
+            $("#btn-cancel-pending").click(() => {
+                pendingTrans = [];
+                renderPendingTable();
+            });
+
+            $("#btn-save-new-stock").click(function () {
+                let category = $("#m-market").val();
+                let symbol = $("#m-symbol").val().trim().toUpperCase();
+                let name = $("#m-name").val().trim();
+                let currency = $("#m-currency").val();
+                let shares = Number($("#m-shares").val());
+                let inputCost = Number($("#m-cost").val());
+
+                if (!symbol || shares <= 0 || inputCost <= 0) {
+                    return alert("請完整填寫代號、股數與成本！");
+                }
+
+                if (name) stockNameMap[symbol] = name;
+                $("#t-symbol option[value='NEW']").before(`<option value="${symbol}">${symbol} ${name || '(新增)'}</option>`);
+
+                if (category === "TW" && !twSymbols.includes(symbol)) twSymbols.push(symbol);
+
+                let costInTWD = currency === "USD" ? Math.round(inputCost * USD_EXRATE) : inputCost;
+                let price = shares > 0 ? Number((costInTWD / shares).toFixed(2)) : 0;
+
+                pendingTrans.push({ category, symbol, type: "buy", date: today, shares, cost: costInTWD, price });
+                renderPendingTable();
+
+                $("#m-symbol, #m-name, #m-shares, #m-cost").val("");
+                $("#newStockPanel").slideUp();
+            });
+
+            $("#btn-add-trans").click(function () {
+                let symbol = $("#t-symbol").val();
+                let type = $("#t-type").val();
+                let date = $("#t-date").val();
+                let currency = $("#t-currency").val();
+                let shares = Number($("#t-shares").val());
+                let inputCost = Number($("#t-cost").val());
+                let category = twSymbols.includes(symbol) ? "TW" : "US";
+
+                let isValid = symbol && date && (type === 'other' || (inputCost > 0 && (type === 'div' || shares > 0)));
+
+                if (isValid) {
+                    let costInTWD = currency === "USD" ? Math.round(inputCost * USD_EXRATE) : inputCost;
+                    let price = shares !== 0 ? Number((costInTWD / shares).toFixed(2)) : 0;
+
+                    pendingTrans.push({ category, symbol, type, date, shares, cost: costInTWD, price });
+                    renderPendingTable();
+
+                    $("#t-symbol, #t-shares, #t-cost").val("");
+                } else {
+                    alert("表單欄位填寫不完全或數值錯誤！(買賣/配息金額需大於0)");
+                }
+            });
+
+            $("#save-all-changes").click(function () {
+                if (pendingTrans.length === 0) return;
+
+                let requests = pendingTrans.map(item => $.ajax({
+                    type: "POST", url: API_BASE_URL,
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify(item), dataType: "json"
+                }));
+
+                Promise.all(requests).then(() => {
+                    alert("成功寫入資料庫！");
+                    pendingTrans = [];
+                    renderPendingTable();
+                    fetchAndRenderData();
+                });
+            });
+
+
+            $(document).on('click', '.tx-stock-header', function () {
+                let $card = $(this).closest('.tx-card');
+                $card.toggleClass('expanded');
+                $card.find('.list-container').slideToggle(300);
+            });
+
+            $(document).on('click', '.btn-delete-trans', function () {
+                let pid = $(this).data('id');
+                if (confirm("確定刪除此筆紀錄？")) {
+                    $.ajax({ type: "DELETE", url: `${API_BASE_URL}/${pid}`, success: fetchAndRenderData });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

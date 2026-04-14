@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>個人資產中心 | 追蹤 </title>
+    <link rel="stylesheet" href="/CSS/all.min.css">
+    <link rel="stylesheet" href="css/my_css3_final.css">
+
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a class="nav-item" href="index.html"><i class="fa-solid fa-house"></i><span>首頁</span></a>
+        <a class="nav-item active" href="follows.html"><i class="fa-solid fa-chart-area"></i><span>追蹤</span></a>
+        <a class="nav-item" href="performance.html"><i class="fa-solid fa-chart-line"></i><span>績效</span></a>
+        <a class="nav-item" href="record.html"><i class="fa-solid fa-list-check"></i><span>記帳</span></a>
+        <a class="nav-item " href="focus.html"><i class="fa-solid fa-circle-info"></i><span>資訊</span></a>
+    </nav>
+
+    <div class="app-container">
+        <header class="hero-section">
+            <div class="hero-title">總資產淨值</div>
+            <div class="hero-amount">
+                <span class="currency">NT$</span>
+                <span class="num" id="total-net-worth">0</span>
+            </div>
+            <div class="hero-sub-info">
+                <div><span style="color: #C5A059;">台股</span><strong class="num" id="tw-net-worth">0</strong></div>
+                <div><span style="color: #D96B6B;">美股</span><strong class="num" id="us-net-worth">0</strong></div>
+                <div><span style="color: #3b6bb7;">現金</span><strong class="num" id="cash-net-worth">0</strong></div>
+            </div>
+        </header>
+
+        <main id="main-content">
+            <div class="card" style="margin-top: -10px;">
+                <div class="card-header" style="cursor: default; padding-bottom: 8px; align-items: center;">
+                    <div class="card-title-group">
+                        <h2 class="card-title">總資產 | 趨勢</h2>
+                        <span class="card-subtitle">對應當下總資產淨值</span>
+                    </div>
+                    <button class="btn-record" id="btn-record-asset">
+                        <i class="fa-solid fa-bookmark"></i> 紀錄現值
+                    </button>
+                </div>
+                <div class="chart-container"
+                    style="background-color: var(--bg-ivory); display: block; border-radius: 12px; border: 1px dashed var(--border-light); padding: 10px;">
+                    <canvas id="trendChartTotal"></canvas>
+                </div>
+            </div>
+
+            <div class="mid-hero-section " style="margin-top: 35px;">
+                <div class="hero-title" style="color: var(--down-green);">股票資產總淨值</div>
+                <div class="hero-amount" style="font-size: 38px; margin-bottom: -10px;">
+                    <span class="currency" style="font-size: 20px;">NT$</span>
+                    <span class="num" id="stock-total-net-worth">0</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header" style="cursor: default; padding-bottom: 8px;">
+                    <div class="card-title-group">
+                        <h2 class="card-title">股票資產 | 趨勢</h2>
+                        <span class="card-subtitle">對應當下股票總淨值</span>
+                    </div>
+                </div>
+                <div class="chart-container"
+                    style="background-color: var(--bg-ivory); display: block; border-radius: 12px; border: 1px dashed var(--border-light); padding: 10px;">
+                    <canvas id="trendChartStock"></canvas>
+                </div>
+            </div>
+
+            <div class="mid-hero-section" style="margin-top: 35px;">
+                <div class="hero-title" style="color: var(--text-navy);">現金總水位</div>
+                <div class="hero-amount" style="font-size: 38px; margin-bottom: -10px;">
+                    <span class="currency" style="font-size: 20px;">NT$</span>
+                    <span class="num" id="cash-total-net-worth">0</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header" style="cursor: default; padding-bottom: 8px;">
+                    <div class="card-title-group">
+                        <h2 class="card-title">現金資產 | 趨勢</h2>
+                        <span class="card-subtitle">對應當下持有現金</span>
+                    </div>
+                </div>
+                <div class="chart-container"
+                    style="background-color: var(--bg-ivory); display: block; border-radius: 12px; border: 1px dashed var(--border-light); padding: 10px;">
+                    <canvas id="trendChartCash"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/jquery-4.0.0.js"></script>
+    <script src="js/chart.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            const API_URL = "http://127.0.0.1:5000/portfolio";
+            const HISTORY_API_URL = "http://127.0.0.1:5000/history";
+
+            $.get(API_URL, res => {
+                let twSumNet = 0, usSumNet = 0, cashSumNet = 0;
+                let usdRate = res.exchange_rate || 31.7;
+
+                if (res.portfolio) {
+                    res.portfolio.forEach(stock => {
+                        let cPrice = stock.current_price || stock.avg_price;
+                        if (stock.category === 'TW') twSumNet += cPrice * stock.total_shares;
+                        else if (stock.category === 'US') usSumNet += cPrice * stock.total_shares * usdRate;
+                    });
+                }
+
+                if (res.cash) res.cash.forEach(c => cashSumNet += c.amount);
+
+                let stockTotalNet = twSumNet + usSumNet;
+                let totalNetWorth = stockTotalNet + cashSumNet;
+
+                $('#tw-net-worth').text(Math.round(twSumNet).toLocaleString());
+                $('#us-net-worth').text(Math.round(usSumNet).toLocaleString());
+                $('#cash-net-worth').text(Math.round(cashSumNet).toLocaleString());
+                $('#stock-total-net-worth').text(Math.round(stockTotalNet).toLocaleString());
+                $('#cash-total-net-worth').text(Math.round(cashSumNet).toLocaleString());
+                $('#total-net-worth').text(Math.round(totalNetWorth).toLocaleString());
+            }).fail(() => console.error('API Error'));
+
+            let chartTotal = null, chartStock = null, chartCash = null;
+
+            function renderTrendCharts() {
+                $.get(HISTORY_API_URL, history => {
+                    if (!history || history.length === 0) return;
+
+                    history.sort((a, b) => {
+                        let [monthA, dayA] = a.date.split('/').map(Number);
+                        let [monthB, dayB] = b.date.split('/').map(Number);
+                        if (monthA !== monthB) return monthA - monthB;
+                        return dayA - dayB;
+                    });
+
+                    let dates = history.map(h => h.date);
+                    let totals = history.map(h => h.total);
+                    let stocks = history.map(h => h.stock);
+                    let cashes = history.map(h => h.cash);
+
+                    Chart.defaults.font.family = "'Inter', 'Noto Sans TC', sans-serif";
+                    Chart.defaults.color = "#8A94A6";
+
+                    function createLineChart(ctxId, chartInstance, label, data, color, bgColor) {
+                        const ctx = document.getElementById(ctxId).getContext('2d');
+                        if (chartInstance) chartInstance.destroy();
+
+                        return new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: dates,
+                                datasets: [{
+                                    label: label,
+                                    data: data,
+                                    borderColor: color,
+                                    backgroundColor: bgColor,
+                                    borderWidth: 2,
+                                    pointBackgroundColor: '#FFF',
+                                    pointBorderColor: color,
+                                    pointBorderWidth: 1.5,
+                                    pointRadius: 2,
+                                    pointHoverRadius: 5,
+                                    fill: true,
+                                }]
+                            },
+                            options: {
+
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                aspectRatio: 2,
+
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: { callbacks: { label: context => 'NT$ ' + context.parsed.y.toLocaleString() } }
+                                },
+                                scales: {
+                                    x: { grid: { display: false } },
+                                    y: { grid: { borderDash: [4, 4], color: 'rgba(26, 36, 54, 0.05)' }, ticks: { maxTicksLimit: 5 } }
+                                }
+                            }
+                        });
+                    }
+
+                    chartTotal = createLineChart('trendChartTotal', chartTotal, '總資產', totals, '#C5A059', 'rgba(197, 160, 89, 0.1)');
+                    chartStock = createLineChart('trendChartStock', chartStock, '股票資產', stocks, '#2a9d8f', 'rgba(42, 157, 143, 0.1)');
+                    chartCash = createLineChart('trendChartCash', chartCash, '現金資產', cashes, '#3b6bb7', 'rgba(59, 107, 183, 0.1)');
+                });
+            }
+
+            renderTrendCharts();
+
+            $('#btn-record-asset').click(function () {
+                let $btn = $(this);
+                let originalText = $btn.html();
+                $btn.html('<i class="fa-solid fa-spinner fa-spin"></i> 同步中...');
+
+                let payload = {
+                    date: (new Date().getMonth() + 1) + '/' + new Date().getDate(),
+                    total: parseInt($('#total-net-worth').text().replace(/,/g, '')) || 0,
+                    stock: parseInt($('#stock-total-net-worth').text().replace(/,/g, '')) || 0,
+                    cash: parseInt($('#cash-total-net-worth').text().replace(/,/g, '')) || 0
+                };
+
+                $.post({
+                    url: HISTORY_API_URL, contentType: 'application/json',
+                    data: JSON.stringify(payload)
+                }).done(() => {
+                    $btn.html('<i class="fa-solid fa-check"></i> 已同步').css({ 'background': 'var(--accent-gold)', 'color': '#FFF' });
+                    renderTrendCharts();
+                    setTimeout(() => { $btn.html(originalText).attr('style', ''); }, 1500);
+                }).fail(() => {
+                    alert("紀錄失敗！");
+                    $btn.html(originalText);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
